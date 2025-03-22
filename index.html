@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Prishu Image to PDF</title>
+		<style>
+			/* General Reset */
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+				font-family: 'Arial', sans-serif;
+			}
+
+			body {
+				background: #e0e5ec;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				min-height: 100vh;
+				padding: 20px;
+			}
+
+			.container {
+				background: #e0e5ec;
+				padding: 30px;
+				border-radius: 20px;
+				box-shadow: 10px 10px 20px #a3b1c6, -10px -10px 20px #ffffff;
+				max-width: 800px;
+				width: 100%;
+				text-align: center;
+			}
+
+			h1 {
+				font-size: 24px;
+				color: #333;
+				margin-bottom: 10px;
+			}
+
+			p {
+				font-size: 14px;
+				color: #666;
+				margin-bottom: 20px;
+			}
+
+			.file-upload-label {
+				background: #e0e5ec;
+				border: none;
+				padding: 10px 20px;
+				border-radius: 10px;
+				box-shadow: 5px 5px 10px #a3b1c6, -5px -5px 10px #ffffff;
+				cursor: pointer;
+				font-size: 14px;
+				color: #333;
+				margin: 10px;
+				transition: all 0.3s ease;
+				display: inline-block;
+			}
+
+			.file-upload-label:hover {
+				box-shadow: inset 5px 5px 10px #a3b1c6, inset -5px -5px 10px #ffffff;
+			}
+
+			input[type="file"] {
+				display: none;
+			}
+
+			button,
+			#downloadLink,
+			#resetBtn {
+				background: #e0e5ec;
+				border: none;
+				padding: 10px 20px;
+				border-radius: 10px;
+				box-shadow: 5px 5px 10px #a3b1c6, -5px -5px 10px #ffffff;
+				cursor: pointer;
+				font-size: 14px;
+				color: #333;
+				margin: 10px;
+				transition: all 0.3s ease;
+			}
+
+			button:hover,
+			#downloadLink:hover,
+			#resetBtn:hover {
+				box-shadow: inset 5px 5px 10px #a3b1c6, inset -5px -5px 10px #ffffff;
+			}
+
+			#downloadLink {
+				text-decoration: none;
+				display: inline-block;
+			}
+
+			#resetBtn {
+				display: none;
+				/* Hidden by default */
+			}
+
+			.results {
+				margin-top: 30px;
+			}
+
+			table {
+				width: 100%;
+				border-collapse: collapse;
+				background: #e0e5ec;
+				border-radius: 10px;
+				box-shadow: 5px 5px 10px #a3b1c6, -5px -5px 10px #ffffff;
+			}
+
+			th,
+			td {
+				padding: 10px;
+				text-align: left;
+				border-bottom: 1px solid #ddd;
+			}
+
+			th {
+				background: #e0e5ec;
+				box-shadow: inset 2px 2px 5px #a3b1c6, inset -2px -2px 5px #ffffff;
+			}
+
+			td {
+				color: #555;
+			}
+
+			/* Upload Progress Bar */
+			.progress-bar {
+				width: 100%;
+				height: 10px;
+				background: #e0e5ec;
+				border-radius: 10px;
+				box-shadow: inset 2px 2px 5px #a3b1c6, inset -2px -2px 5px #ffffff;
+				margin: 10px 0;
+				overflow: hidden;
+			}
+
+			.progress-bar .progress {
+				height: 100%;
+				background: #4caf50;
+				width: 0;
+				transition: width 0.3s ease;
+			}
+
+			/* Image Preview */
+			.image-preview {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 10px;
+				margin: 20px 0;
+			}
+
+			.image-preview img {
+				max-width: 100px;
+				max-height: 100px;
+				border-radius: 10px;
+				box-shadow: 5px 5px 10px #a3b1c6, -5px -5px 10px #ffffff;
+			}
+
+			/* Circular Progress Bar */
+			.circular-progress {
+				position: relative;
+				width: 100px;
+				height: 100px;
+				margin: 20px auto;
+			}
+
+			.progress-circle {
+				width: 100%;
+				height: 100%;
+				border-radius: 50%;
+				background: conic-gradient(#4caf50 0%, #e0e5ec 0%);
+				box-shadow: 5px 5px 10px #a3b1c6, -5px -5px 10px #ffffff;
+			}
+
+			.progress-text {
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				font-size: 16px;
+				color: #333;
+			}
+
+			/* Content Section */
+			.content {
+				margin-top: 40px;
+				text-align: left;
+			}
+
+			/* Topic Section */
+			.topic {
+				background: #e0e5ec;
+				padding: 20px;
+				border-radius: 20px;
+				box-shadow: 10px 10px 20px #a3b1c6, -10px -10px 20px #ffffff;
+				margin-bottom: 30px;
+			}
+
+			.topic-heading {
+				font-size: 22px;
+				margin-bottom: 15px;
+				color: red;
+				/* Red color for topic headings */
+			}
+
+			.subtopic {
+				margin-bottom: 15px;
+			}
+
+			.subtopic h3 {
+				font-size: 18px;
+				margin-bottom: 10px;
+				color: green;
+				/* Green color for subtopic headings */
+			}
+
+			.subtopic p {
+				font-size: 14px;
+				color: blue;
+				/* Blue color for subtopic descriptions */
+			}
+
+			/* Responsive Design */
+			@media (max-width: 600px) {
+				.container {
+					padding: 20px;
+				}
+
+				h1 {
+					font-size: 20px;
+				}
+
+				p {
+					font-size: 12px;
+				}
+
+				.file-upload-label,
+				button,
+				#downloadLink,
+				#resetBtn {
+					font-size: 12px;
+					padding: 8px 16px;
+				}
+
+				.image-preview img {
+					max-width: 80px;
+					max-height: 80px;
+				}
+
+				.circular-progress {
+					width: 80px;
+					height: 80px;
+				}
+
+				.progress-text {
+					font-size: 14px;
+				}
+
+				.topic-heading {
+					font-size: 20px;
+				}
+
+				.subtopic h3 {
+					font-size: 16px;
+				}
+
+				.subtopic p {
+					font-size: 12px;
+				}
+
+				table {
+					font-size: 12px;
+				}
+
+				th,
+				td {
+					padding: 8px;
+				}
+			}
+		</style>
+	</head>
+
+	<body>
+		<div class="container">
+			<!-- Tool Section -->
+			<h1>📸 Prishu Image to PDF 📄</h1>
+			<p>Upload one or more images to convert them into a single PDF file.</p>
+
+			<label for="imageInput" class="file-upload-label">📁 Choose Images</label>
+			<input type="file" id="imageInput" accept="image/*" multiple>
+			<div id="uploadProgress" class="progress-bar" style="display: none;">
+				<div class="progress"></div>
+			</div>
+			<div id="imagePreview" class="image-preview"></div>
+			<button id="convertBtn">✨ Convert to PDF</button>
+			<div id="conversionProgress" class="circular-progress" style="display: none;">
+				<div class="progress-circle"></div>
+				<span class="progress-text">0%</span>
+			</div>
+			<a id="downloadLink" style="display: none;">⬇️ Download PDF</a>
+			<button id="resetBtn" style="display: none;">🔄 Convert Other Images</button>
+
+			<div class="results">
+				<h2>📊 Conversion Results</h2>
+				<table id="resultsTable">
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>Image Name</th>
+							<th>Status</th>
+						</tr>
+					</thead>
+					<tbody>
+						<!-- Rows will be added dynamically -->
+					</tbody>
+				</table>
+			</div>
+
+			<!-- Content Section -->
+			<div class="content">
+				<!-- Why We Chose It -->
+				<div class="topic">
+					<h2 class="topic-heading" style="color: red;">Why We Chose It</h2>
+					<div class="subtopic">
+						<h3 style="color: green;">Ease of Use</h3>
+						<p style="color: blue;">Our Image to PDF tool is designed to be simple and intuitive, making it easy for anyone to convert images into PDFs without any technical knowledge.</p>
+					</div>
+					<div class="subtopic">
+						<h3 style="color: green;">Efficiency</h3>
+						<p style="color: blue;">With just a few clicks, you can convert multiple images into a single PDF file, saving time and effort.</p>
+					</div>
+				</div>
+
+				<!-- How It Works -->
+				<div class="topic">
+					<h2 class="topic-heading" style="color: red;">How It Works</h2>
+					<div class="subtopic">
+						<h3 style="color: green;">Upload Images</h3>
+						<p style="color: blue;">Select one or more images from your device using the "Choose Images" button.</p>
+					</div>
+					<div class="subtopic">
+						<h3 style="color: green;">Convert to PDF</h3>
+						<p style="color: blue;">Click the "Convert to PDF" button to start the conversion process. Each image will be added as a separate page in the PDF.</p>
+					</div>
+					<div class="subtopic">
+						<h3 style="color: green;">Download PDF</h3>
+						<p style="color: blue;">Once the conversion is complete, click the "Download PDF" button to save the file to your device.</p>
+					</div>
+				</div>
+
+				<!-- How to Use -->
+				<div class="topic">
+					<h2 class="topic-heading" style="color: red;">How to Use</h2>
+					<div class="subtopic">
+						<h3 style="color: green;">Step 1: Upload Images</h3>
+						<p style="color: blue;">Click the "Choose Images" button to select images from your device.</p>
+					</div>
+					<div class="subtopic">
+						<h3 style="color: green;">Step 2: Convert to PDF</h3>
+						<p style="color: blue;">Click the "Convert to PDF" button to start the conversion process.</p>
+					</div>
+					<div class="subtopic">
+						<h3 style="color: green;">Step 3: Download PDF</h3>
+						<p style="color: blue;">After conversion, click the "Download PDF" button to save the file.</p>
+					</div>
+				</div>
+
+				<!-- FAQs -->
+				<div class="topic">
+					<h2 class="topic-heading" style="color: red;">FAQs</h2>
+					<div class="subtopic">
+						<h3 style="color: green;">Can I convert multiple images into a single PDF?</h3>
+						<p style="color: blue;">Yes, you can upload multiple images, and they will be combined into a single PDF file.</p>
+					</div>
+					<div class="subtopic">
+						<h3 style="color: green;">What image formats are supported?</h3>
+						<p style="color: blue;">We support common image formats like JPG, PNG, and JPEG.</p>
+					</div>
+					<div class="subtopic">
+						<h3 style="color: green;">Is there a limit to the number of images I can upload?</h3>
+						<p style="color: blue;">No, you can upload as many images as you want, but ensure your device has enough memory to handle them.</p>
+					</div>
+					<div class="subtopic">
+						<h3 style="color: green;">Can I reset the tool to upload new images?</h3>
+						<p style="color: blue;">Yes, click the "Convert Other Images" button to reset the tool and upload new images.</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+		<script>
+			const {
+				jsPDF
+			} = window.jspdf;
+
+			document.getElementById('imageInput').addEventListener('change', handleImageUpload);
+			document.getElementById('convertBtn').addEventListener('click', convertImagesToPDF);
+			document.getElementById('resetBtn').addEventListener('click', resetApp);
+
+			let uploadedImages = [];
+			let uploadedFiles = []; // Store file objects for names
+
+			function handleImageUpload(event) {
+				const files = event.target.files;
+				const imagePreview = document.getElementById('imagePreview');
+				const uploadProgress = document.getElementById('uploadProgress');
+				const progress = uploadProgress.querySelector('.progress');
+
+				imagePreview.innerHTML = ''; // Clear previous previews
+				uploadedImages = []; // Reset uploaded images
+				uploadedFiles = []; // Reset uploaded files
+				uploadProgress.style.display = 'block';
+				progress.style.width = '0%';
+
+				let loadedCount = 0;
+
+				Array.from(files).forEach((file) => {
+					const reader = new FileReader();
+
+					reader.onload = function(e) {
+						const img = document.createElement('img');
+						img.src = e.target.result;
+						imagePreview.appendChild(img);
+						uploadedImages.push(img);
+						uploadedFiles.push(file); // Store the file object
+
+						// Update upload progress
+						loadedCount++;
+						progress.style.width = `${(loadedCount / files.length) * 100}%`;
+
+						if (loadedCount === files.length) {
+							setTimeout(() => {
+								uploadProgress.style.display = 'none';
+							}, 500);
+						}
+					};
+
+					reader.readAsDataURL(file);
+				});
+			}
+
+			async function convertImagesToPDF() {
+				const resultsTable = document.getElementById('resultsTable').getElementsByTagName('tbody')[0];
+				const conversionProgress = document.getElementById('conversionProgress');
+				const progressCircle = conversionProgress.querySelector('.progress-circle');
+				const progressText = conversionProgress.querySelector('.progress-text');
+
+				resultsTable.innerHTML = ''; // Clear previous results
+				conversionProgress.style.display = 'block';
+
+				if (uploadedImages.length === 0) {
+					alert('Please select at least one image.');
+					return;
+				}
+
+				const pdf = new jsPDF();
+				let yPos = 10;
+
+				for (let i = 0; i < uploadedImages.length; i++) {
+					const img = uploadedImages[i];
+					const fileName = uploadedFiles[i].name; // Get the file name
+
+					// Calculate image dimensions to fit the PDF page width while maintaining aspect ratio
+					const imgWidth = pdf.internal.pageSize.getWidth() - 20; // Max width with margins
+					const imgHeight = (img.naturalHeight * imgWidth) / img.naturalWidth;
+
+					// Add a new page for each image (except the first one)
+					if (i > 0) {
+						pdf.addPage();
+						yPos = 10; // Reset Y position for the new page
+					}
+
+					// Add the image to the PDF
+					pdf.addImage(img, 'JPEG', 10, yPos, imgWidth, imgHeight);
+
+					// Update conversion progress
+					const progress = ((i + 1) / uploadedImages.length) * 100;
+					progressCircle.style.background = `conic-gradient(#4caf50 ${progress}%, #e0e5ec ${progress}%)`;
+					progressText.textContent = `${Math.round(progress)}%`;
+
+					// Add row to results table with the file name
+					const row = resultsTable.insertRow();
+					row.insertCell().textContent = i + 1;
+					row.insertCell().textContent = fileName; // Display the file name
+					row.insertCell().innerHTML = '✅ Converted';
+
+					// Simulate a small delay for better progress visualization
+					await new Promise((resolve) => setTimeout(resolve, 100));
+				}
+
+				// Hide circular progress bar and show download link and reset button
+				conversionProgress.style.display = 'none';
+				const downloadLink = document.getElementById('downloadLink');
+				const resetBtn = document.getElementById('resetBtn');
+				downloadLink.style.display = 'inline-block';
+				resetBtn.style.display = 'inline-block';
+				downloadLink.href = pdf.output('bloburl');
+				downloadLink.download = 'converted.pdf';
+			}
+
+			function resetApp() {
+				// Clear all data and reset the app
+				uploadedImages = [];
+				uploadedFiles = []; // Clear uploaded files
+				document.getElementById('imagePreview').innerHTML = '';
+				document.getElementById('uploadProgress').style.display = 'none';
+				document.getElementById('conversionProgress').style.display = 'none';
+				document.getElementById('downloadLink').style.display = 'none';
+				document.getElementById('resetBtn').style.display = 'none';
+				document.getElementById('resultsTable').getElementsByTagName('tbody')[0].innerHTML = '';
+				document.getElementById('imageInput').value = ''; // Clear file input
+			}
+		</script>
+	</body>
+
+</html>
